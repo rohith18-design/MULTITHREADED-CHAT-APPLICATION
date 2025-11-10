@@ -1,4 +1,4 @@
-##CHAT SERVER.JAVA.
+//CHAT SERVER.JAVA.
 
 // ChatServer.java
 // Multithreaded chat server using Java sockets.
@@ -125,6 +125,73 @@ public class ChatServer {
                 if (socket != null && !socket.isClosed()) socket.close();
             } catch (IOException ignored) {}
             server.removeClient(this);
+        }
+    }
+}
+
+//CHAT CLIENT.JAVA 
+
+// ChatClient.java
+// A simple chat client that connects to ChatServer and sends/receives messages.
+// Author: [Your Name]
+// Date: [Insert Date]
+
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+public class ChatClient {
+    private static final String DEFAULT_HOST = "localhost";
+    private static final int DEFAULT_PORT = 5000;
+
+    public static void main(String[] args) {
+        String host = DEFAULT_HOST;
+        int port = DEFAULT_PORT;
+        if (args.length >= 1) host = args[0];
+        if (args.length >= 2) {
+            try { port = Integer.parseInt(args[1]); } catch (NumberFormatException ignored) {}
+        }
+
+        new ChatClient().start(host, port);
+    }
+
+    public void start(String host, int port) {
+        System.out.println("Connecting to chat server at " + host + ":" + port + " ...");
+        try (Socket socket = new Socket(host, port);
+             BufferedReader serverIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter serverOut = new PrintWriter(socket.getOutputStream(), true);
+             Scanner console = new Scanner(System.in)) {
+
+            // Thread to read messages from server
+            Thread readerThread = new Thread(() -> {
+                try {
+                    String msgFromServer;
+                    while ((msgFromServer = serverIn.readLine()) != null) {
+                        System.out.println(msgFromServer);
+                    }
+                } catch (IOException e) {
+                    System.out.println("Disconnected from server.");
+                }
+            });
+            readerThread.setDaemon(true);
+            readerThread.start();
+
+            // Main thread: read user input and send to server
+            while (true) {
+                String input = console.nextLine();
+                if (input == null) break;
+                input = input.trim();
+                if (input.equalsIgnoreCase("/quit")) {
+                    serverOut.println("/quit");
+                    break;
+                } else {
+                    serverOut.println(input);
+                }
+            }
+
+            System.out.println("Closing connection...");
+        } catch (IOException e) {
+            System.err.println("Unable to connect to server: " + e.getMessage());
         }
     }
 }
