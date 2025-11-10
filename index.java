@@ -1,4 +1,4 @@
-##CHAT SERVER.JAVA
+##CHAT SERVER.JAVA.
 
 // ChatServer.java
 // Multithreaded chat server using Java sockets.
